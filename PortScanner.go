@@ -14,6 +14,7 @@ var subnetVal string
 var portStart int
 var portEnd int
 var portsToScan string
+var portSingle int
 
 func Hosts(cidr string) ([]string, error) {
 	ip, ipnet, err := net.ParseCIDR(cidr)
@@ -61,9 +62,17 @@ func worker(ports, results chan int) {
 }
 
 func parsePorts() {
-	s := strings.Split(portsToScan, "-")
-	portStart, _ = strconv.Atoi(s[0])
-	portEnd, _ = strconv.Atoi(s[1])
+	if portSingle == 0 {
+		if portsToScan  == "NULL"{
+			portsToScan = "22-81"
+		}
+		s := strings.Split(portsToScan, "-")
+		portStart, _ = strconv.Atoi(s[0])
+		portEnd, _ = strconv.Atoi(s[1])
+	} else {
+		portStart = portSingle
+		portEnd = portSingle + 1
+	}
 }
 
 func scanPorts() {
@@ -105,8 +114,8 @@ func scanPorts() {
 func main() {
 	flag.StringVar(&hostVal, "host", "NULL", "DNS or IP of Server")
 	flag.StringVar(&subnetVal, "subnet", "NULL", "cidr to scan")
-	flag.StringVar(&portsToScan, "portVal", "22-444", "port range start-stop")
-	//rangePtr := flag.String("portrange", nil, "port range to scan")
+	flag.StringVar(&portsToScan, "portrange", "NULL", "port range start-stop")
+	flag.IntVar(&portSingle, "port", 0, "port range to scan")
 	flag.Parse()
 	parsePorts()
 
