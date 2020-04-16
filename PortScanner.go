@@ -7,7 +7,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-    "io/ioutil"
+    	"io/ioutil"
+    	"net/http"
 )
 
 var hostVal string
@@ -106,12 +107,26 @@ func scanPorts() {
 		fmt.Println("Found open ports :")
 
 		for _, port := range openports {
-			fmt.Printf("\t%d / %s\n", port, proto)
+			serviceInfo := serviceDetection(hostVal, port)
+			fmt.Printf("\t%d / %s %s\n", port, proto, serviceInfo)
+			
 		}
 	} 
 
 }
 
+func serviceDetection(hostd string, portd int ) string{
+	webAddr := fmt.Sprintf("http://%s:%d", hostd, portd)
+	resp, err := http.Get(webAddr)
+
+	content := " "
+
+	if err == nil {
+		content = fmt.Sprintf("http\t%s",resp.Header["Server"])
+	}
+	return content
+	
+}
 
 func main() {
 	flag.StringVar(&hostVal, "host", "NULL", "DNS or IP of Server")
