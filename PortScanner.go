@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+    "io/ioutil"
 )
 
 var hostVal string
@@ -15,6 +16,7 @@ var portStart int
 var portEnd int
 var portsToScan string
 var portSingle int
+var proto string
 
 func Hosts(cidr string) ([]string, error) {
 	ip, ipnet, err := net.ParseCIDR(cidr)
@@ -50,8 +52,7 @@ func inc(ip net.IP) {
 func worker(ports, results chan int) {
 	for p := range ports {
 		address := fmt.Sprintf("%s:%d", hostVal, p)
-		conn, err := net.Dial("tcp", address)
-
+		conn, err := net.Dial(proto, address)
 		if err != nil {
 			results <- 0
 			continue
@@ -105,19 +106,29 @@ func scanPorts() {
 		fmt.Println("Found open ports :")
 
 		for _, port := range openports {
-			fmt.Printf("\t%d / tcp\n", port)
+			fmt.Printf("\t%d / %s\n", port, proto)
 		}
-	}
+	} 
 
 }
+
 
 func main() {
 	flag.StringVar(&hostVal, "host", "NULL", "DNS or IP of Server")
 	flag.StringVar(&subnetVal, "subnet", "NULL", "cidr to scan")
 	flag.StringVar(&portsToScan, "portrange", "NULL", "port range start-stop")
 	flag.IntVar(&portSingle, "port", 0, "port range to scan")
+	flag.StringVar(&proto, "protocol", "tcp", "Currently ONLY TCP. protocol to scan. tcp or udp.")
 	flag.Parse()
 	parsePorts()
+
+	dat, _ := ioutil.ReadFile("banner.txt")
+    fmt.Print(string(dat))
+
+//Currently cannot scan udp ports :(
+	if proto != "tcp" {
+		proto = "tcp"
+	}
 
 	if hostVal != "NULL" {
 		fmt.Printf("Scanning : %s ....\n", hostVal)
